@@ -1,28 +1,29 @@
 import os
-from pathlib import Path
+import streamlit as st
 from dotenv import load_dotenv
 from google import genai
 
-# Project root
-BASE_DIR = Path(__file__).resolve().parent.parent
+# Load local .env (for local development)
+load_dotenv()
 
-# Absolute path to .env
-ENV_PATH = BASE_DIR / ".env"
+# Streamlit Secrets → Local .env
+API_KEY = st.secrets.get(
+    "GOOGLE_API_KEY",
+    os.getenv("GOOGLE_API_KEY")
+)
 
-# Load .env
-load_dotenv(dotenv_path=ENV_PATH)
+if not API_KEY:
+    raise ValueError("GOOGLE_API_KEY is missing.")
 
-api_key = os.getenv("GOOGLE_API_KEY")
-
-if api_key is None:
-    raise ValueError(f"GOOGLE_API_KEY not found in {ENV_PATH}")
-
-client = genai.Client(api_key=api_key)
+client = genai.Client(
+    api_key=API_KEY
+)
 
 
-def ask_llm(prompt: str):
+def ask_llm(prompt):
     response = client.models.generate_content(
         model="gemini-2.5-flash",
-        contents=prompt,
+        contents=prompt
     )
+
     return response.text
